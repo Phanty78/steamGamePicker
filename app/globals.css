@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+/* Steam Color Palette */
+:root {
+  --steam-bg-dark: #171a21;
+  --steam-bg-medium: #1b2838;
+  --steam-bg-light: #2a475e;
+  --steam-blue: #66c0f4;
+  --steam-blue-hover: #56a9d8;
+  --steam-green: #5c7e10;
+  --steam-text-light: #c7d5e0;
+  --steam-text-dark: #8f98a0;
+  --steam-link: #1b8ae4;
+}
+
+@theme inline {
+  --color-background: var(--steam-bg-dark);
+  --color-foreground: var(--steam-text-light);
+  --font-sans: 'Motiva Sans', Arial, Helvetica, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--steam-bg-dark);
+  color: var(--steam-text-light);
+  font-family: 'Motiva Sans', Arial, Helvetica, sans-serif;
+}
+
+/* Custom scrollbar - Steam style */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(27, 40, 56, 0.5);
+  border-radius: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(102, 192, 244, 0.4);
+  border-radius: 0;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(102, 192, 244, 0.6);
+}
+
+/* Smooth animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}
+
+/* Steam button gradient */
+.steam-button {
+  background: linear-gradient(90deg, #06BFFF 0%, #2D73FF 100%);
+}
+
+.steam-button:hover {
+  background: linear-gradient(90deg, #1094D3 0%, #2362D7 100%);
+}
