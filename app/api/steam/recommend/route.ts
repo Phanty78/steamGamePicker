@@ -86,7 +86,8 @@ export async function GET(request: NextRequest) {
                 const detailsRes = await fetch(detailsUrl);
                 const detailsData = await detailsRes.json();
 
-                if (detailsData[game.appid]?.success && detailsData[game.appid]?.data) {
+                // Check if detailsData is not null and has the expected structure
+                if (detailsData && detailsData[game.appid] && detailsData[game.appid].success && detailsData[game.appid].data) {
                     gamesWithDetails.push({
                         ...game,
                         details: detailsData[game.appid].data,

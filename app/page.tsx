@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import GameList from '@/components/GameList';
 import RecommendationCard from '@/components/RecommendationCard';
 import { LOADING_MESSAGES } from '@/lib/constants';
+import { saveGameData, getGameData } from '@/lib/cache';
 
 interface Game {
   appid: number;
@@ -13,6 +14,9 @@ interface Game {
   details?: {
     genres?: Array<{ description: string }>;
     metacritic?: { score: number } | null;
+    categories?: Array<{ description: string }>;
+    short_description?: string;
+    header_image?: string;
   };
 }
 
@@ -69,19 +73,27 @@ export default function Home() {
 
           // Update this specific game with details
           if (gameDetails && gameDetails.success && gameDetails.data) {
-            setGames(prevGames =>
-              prevGames.map(g =>
+            setGames(prevGames => {
+              const updatedGames = prevGames.map(g =>
                 g.appid === game.appid
                   ? {
                     ...g,
                     details: {
                       genres: gameDetails.data.genres,
-                      metacritic: gameDetails.data.metacritic || null
+                      metacritic: gameDetails.data.metacritic || null,
+                      categories: gameDetails.data.categories,
+                      short_description: gameDetails.data.short_description,
+                      header_image: gameDetails.data.header_image
                     }
                   }
                   : g
-              )
-            );
+              );
+
+              // Save to cache after each update
+              saveGameData(username, updatedGames);
+
+              return updatedGames;
+            });
           }
         }
       } catch (err) {
@@ -138,7 +150,7 @@ export default function Home() {
       }
 
       // Step 4: Display games immediately, then load details progressively
-      const gamesToFetch = lowPlaytimeGames.slice(0, 300);
+      const gamesToFetch = lowPlaytimeGames.slice(0, 50);
 
       // Show games immediately without details
       setGames(gamesToFetch);
@@ -158,14 +170,73 @@ export default function Home() {
     setError('');
 
     try {
-      const res = await fetch(`/api/steam/recommend?vanity=${encodeURIComponent(username)}&filter=${filter}`);
-      const data = await res.json();
+      // Get games from cache first
+      const cachedGames = getGameData(username);
 
-      if (!res.ok) {
-        throw new Error(data.error || 'Failed to get recommendation');
+      if (!cachedGames || cachedGames.length === 0) {
+        throw new Error('No games loaded. Please analyze your library first.');
       }
 
-      setRecommendation(data);
+      // Filter games that have details and low playtime
+      let filteredGames = cachedGames.filter(
+        g => g.details && g.playtime_forever < 60
+      );
+
+      // Apply specific filters
+      if (filter === 'rpg') {
+        filteredGames = filteredGames.filter(g =>
+          g.details?.genres?.some(genre =>
+            genre.description.toLowerCase().includes('rpg')
+          )
+        );
+      } else if (filter === 'fps') {
+        filteredGames = filteredGames.filter(g =>
+          g.details?.genres?.some(genre =>
+            genre.description.toLowerCase().includes('action') ||
+            genre.description.toLowerCase().includes('shooter')
+          ) ||
+          g.details?.categories?.some(cat =>
+            cat.description.toLowerCase().includes('fps')
+          )
+        );
+      } else if (filter === 'multiplayer') {
+        filteredGames = filteredGames.filter(g =>
+          g.details?.categories?.some(cat =>
+            cat.description.toLowerCase().includes('multi-player') ||
+            cat.description.toLowerCase().includes('multiplayer')
+          )
+        );
+      } else if (filter === 'top') {
+        filteredGames = filteredGames
+          .filter(g => g.details?.metacritic?.score)
+          .sort((a, b) =>
+            (b.details?.metacritic?.score || 0) - (a.details?.metacritic?.score || 0)
+          );
+      }
+
+      if (filteredGames.length === 0) {
+        throw new Error(`No games found matching filter: ${filter}`);
+      }
+
+      // Select game based on filter
+      let selectedGame;
+      if (filter === 'top') {
+        selectedGame = filteredGames[0];
+      } else {
+        // Random selection
+        selectedGame = filteredGames[Math.floor(Math.random() * filteredGames.length)];
+      }
+
+      // Build recommendation object
+      setRecommendation({
+        title: selectedGame.name,
+        appid: selectedGame.appid,
+        genres: selectedGame.details?.genres?.map(g => g.description) || [],
+        score: selectedGame.details?.metacritic?.score || null,
+        icon: selectedGame.details?.header_image || '',
+        playtime: selectedGame.playtime_forever,
+        description: selectedGame.details?.short_description || '',
+      });
     } catch (err: unknown) {
       setError((err as Error).message || 'Failed to get recommendation');
     } finally {
