@@ -8,7 +8,9 @@ interface GameCardProps {
 }
 
 export default function GameCard({ name, appid, playtime, icon, genres, score }: GameCardProps) {
-    const iconUrl = icon || `https://media.steampowered.com/steamcommunity/public/images/apps/${appid}/${icon}.jpg`;
+    const iconUrl = icon
+        ? `https://media.steampowered.com/steamcommunity/public/images/apps/${appid}/${icon}.jpg`
+        : `https://cdn.cloudflare.steamstatic.com/steam/apps/${appid}/header.jpg`;
     const playtimeHours = (playtime / 60).toFixed(1);
 
     return (
