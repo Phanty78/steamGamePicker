@@ -72,8 +72,8 @@ export default function Home() {
         return;
       }
 
-      // Step 4: Fetch details for first 20 games (to avoid too many requests)
-      const gamesToFetch = lowPlaytimeGames.slice(0, 20);
+      // Step 4: Fetch details for games (limit to 300 to balance between showing more games and API rate limits)
+      const gamesToFetch = lowPlaytimeGames.slice(0, 300);
       const gamesWithDetails = await Promise.all(
         gamesToFetch.map(async (game: Game) => {
           try {

@@ -16,7 +16,8 @@ export async function GET(request: NextRequest) {
         const response = await fetch(url);
         const data = await response.json();
 
-        if (data[appid]?.success && data[appid]?.data) {
+        // Check if data exists and is not null before accessing properties
+        if (data && data[appid] && data[appid].success && data[appid].data) {
             const gameData = data[appid].data;
 
             return NextResponse.json({
