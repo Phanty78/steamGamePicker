@@ -17,6 +17,8 @@ export default function Home() {
   const [loadingRecommendation, setLoadingRecommendation] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
+  const [topRatedIndex, setTopRatedIndex] = useState(0);
+  const [lastFilter, setLastFilter] = useState<string>('');
 
   // Rotate loading messages every 2 seconds in random order
   useEffect(() => {
@@ -199,11 +201,19 @@ export default function Home() {
       // Select game based on filter
       let selectedGame;
       if (filter === 'top') {
-        selectedGame = filteredGames[0];
+        let nextIndex = 0;
+        if (lastFilter === 'top') {
+          nextIndex = (topRatedIndex + 1) % filteredGames.length;
+        }
+        selectedGame = filteredGames[nextIndex];
+        setTopRatedIndex(nextIndex);
       } else {
         // Random selection
         selectedGame = filteredGames[Math.floor(Math.random() * filteredGames.length)];
+        setTopRatedIndex(0);
       }
+
+      setLastFilter(filter);
 
       // Build recommendation object
       setRecommendation({
