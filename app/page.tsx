@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import GameList from '@/components/GameList';
 import RecommendationCard from '@/components/RecommendationCard';
+import { LOADING_MESSAGES } from '@/lib/constants';
 
 interface Game {
   appid: number;
@@ -32,6 +33,70 @@ export default function Home() {
   const [games, setGames] = useState<Game[]>([]);
   const [recommendation, setRecommendation] = useState<Recommendation | null>(null);
   const [loadingRecommendation, setLoadingRecommendation] = useState(false);
+  const [loadingDetails, setLoadingDetails] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
+
+  // Rotate loading messages every 2 seconds in random order
+  useEffect(() => {
+    if (!loadingDetails) return;
+
+    // Create a shuffled copy of messages
+    const shuffledMessages = [...LOADING_MESSAGES].sort(() => Math.random() - 0.5);
+    let messageIndex = 0;
+
+    const interval = setInterval(() => {
+      messageIndex = (messageIndex + 1) % shuffledMessages.length;
+      setLoadingMessage(shuffledMessages[messageIndex]);
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [loadingDetails]);
+
+  // Progressive loading function to fetch game details in the background
+  const loadGameDetailsProgressively = async (gamesToLoad: Game[]) => {
+    setLoadingDetails(true);
+
+    // Process games one by one with throttling
+    for (let i = 0; i < gamesToLoad.length; i++) {
+      const game = gamesToLoad[i];
+
+      try {
+        const detailsRes = await fetch(`/api/steam/details?appids=${game.appid}`);
+
+        if (detailsRes.ok) {
+          const detailsData = await detailsRes.json();
+          const gameDetails = detailsData[game.appid];
+
+          // Update this specific game with details
+          if (gameDetails && gameDetails.success && gameDetails.data) {
+            setGames(prevGames =>
+              prevGames.map(g =>
+                g.appid === game.appid
+                  ? {
+                    ...g,
+                    details: {
+                      genres: gameDetails.data.genres,
+                      metacritic: gameDetails.data.metacritic || null
+                    }
+                  }
+                  : g
+              )
+            );
+          }
+        }
+      } catch (err) {
+        console.error(`Failed to fetch details for game ${game.appid}`, err);
+      }
+
+      // il faut jouer ici pour éviter le rate limiting
+      if (i < gamesToLoad.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+
+    setLoadingDetails(false);
+  };
+
 
   const analyzeLibrary = async () => {
     if (!username.trim()) {
@@ -72,24 +137,14 @@ export default function Home() {
         return;
       }
 
-      // Step 4: Fetch details for games (limit to 300 to balance between showing more games and API rate limits)
+      // Step 4: Display games immediately, then load details progressively
       const gamesToFetch = lowPlaytimeGames.slice(0, 300);
-      const gamesWithDetails = await Promise.all(
-        gamesToFetch.map(async (game: Game) => {
-          try {
-            const detailsRes = await fetch(`/api/steam/details?appid=${game.appid}`);
-            if (detailsRes.ok) {
-              const details = await detailsRes.json();
-              return { ...game, details };
-            }
-          } catch (err) {
-            console.error(`Failed to fetch details for ${game.appid}`);
-          }
-          return game;
-        })
-      );
 
-      setGames(gamesWithDetails);
+      // Show games immediately without details
+      setGames(gamesToFetch);
+
+      // Load details in the background
+      loadGameDetailsProgressively(gamesToFetch);
     } catch (err: unknown) {
       setError((err as Error).message || 'An error occurred');
     } finally {
@@ -225,6 +280,46 @@ export default function Home() {
               Recommended for You
             </h2>
             <RecommendationCard {...recommendation} />
+          </div>
+        )}
+
+        {/* Loading Details Progress Bar */}
+        {loadingDetails && games.length > 0 && (
+          <div className="mb-6">
+            <div className="max-w-2xl mx-auto">
+              <div className="mb-3 flex justify-between items-center">
+                <span
+                  className="text-xl font-bold"
+                  style={{
+                    color: '#66c0f4',
+                    textShadow: '0 0 20px rgba(102, 192, 244, 0.8), 0 0 30px rgba(102, 192, 244, 0.4)',
+                    letterSpacing: '0.5px'
+                  }}
+                >
+                  {loadingMessage}
+                </span>
+                <span className="text-sm font-medium" style={{ color: '#8f98a0' }}>
+                  {games.filter(g => g.details).length} / {games.length}
+                </span>
+              </div>
+              <div
+                className="w-full rounded-sm overflow-hidden"
+                style={{
+                  background: '#1b2838',
+                  height: '8px',
+                  border: '1px solid #2a475e'
+                }}
+              >
+                <div
+                  className="h-full transition-all duration-300 ease-out"
+                  style={{
+                    width: `${(games.filter(g => g.details).length / games.length) * 100}%`,
+                    background: 'linear-gradient(90deg, #66c0f4 0%, #417a9b 100%)',
+                    boxShadow: '0 0 10px rgba(102, 192, 244, 0.5)'
+                  }}
+                />
+              </div>
+            </div>
           </div>
         )}
 
