@@ -387,6 +387,13 @@ export default function Home() {
         {games.length > 0 && (
           <GameList games={games} />
         )}
+
+        {/* Footer */}
+        <footer className="mt-16 text-center pb-8" style={{ color: '#8f98a0' }}>
+          <p>
+            made by <a href="https://github.com/Phanty78" target="_blank" rel="noopener noreferrer" className="hover:text-[#66c0f4] transition-colors">phanty</a> with &lt;3
+          </p>
+        </footer>
       </div>
     </div>
   );
