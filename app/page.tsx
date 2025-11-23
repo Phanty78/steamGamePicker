@@ -128,7 +128,7 @@ export default function Home() {
       }
 
       // Step 4: Display games immediately, then load details progressively
-      const gamesToFetch = lowPlaytimeGames.slice(0, 50);
+      const gamesToFetch = lowPlaytimeGames.slice(0, 300);
 
       // Show games immediately without details
       setGames(gamesToFetch);
