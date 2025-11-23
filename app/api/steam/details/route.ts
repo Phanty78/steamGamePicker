@@ -31,9 +31,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Batching logic
-    // Note: Steam Storefront API often returns null for multi-appid requests requesting full details.
-    // We use batch size of 1 to ensure reliability, effectively making this sequential.
-    const BATCH_SIZE = 1;
+    // Steam API can handle multiple appids per request
+    // We use batch size of 20 to balance between request size and reliability
+    const BATCH_SIZE = 20;
     const batches = [];
     for (let i = 0; i < appids.length; i += BATCH_SIZE) {
         batches.push(appids.slice(i, i + BATCH_SIZE));
@@ -42,15 +42,19 @@ export async function GET(request: NextRequest) {
     const mergedResults: Record<string, any> = {};
 
     try {
-        // Process batches sequentially
-        for (const batch of batches) {
-            const batchData = await fetchBatchWithRetry(batch);
+        // Process all batches in parallel for maximum speed
+        const batchPromises = batches.map((batch, index) => 
+            // Add a small stagger to avoid hitting rate limits
+            new Promise(resolve => setTimeout(resolve, index * 100))
+                .then(() => fetchBatchWithRetry(batch))
+        );
+
+        const batchResults = await Promise.all(batchPromises);
+        
+        // Merge all results
+        batchResults.forEach(batchData => {
             Object.assign(mergedResults, batchData);
-            // Add a small delay to avoid rate limiting since we are making multiple requests
-            if (batches.length > 1) {
-                await new Promise(resolve => setTimeout(resolve, 200));
-            }
-        }
+        });
 
         return NextResponse.json(mergedResults);
     } catch (error) {
