@@ -163,35 +163,22 @@ export default function Home() {
       );
 
       // Apply specific filters
-      if (filter === 'rpg') {
-        filteredGames = filteredGames.filter(g =>
-          g.details?.genres?.some(genre =>
-            genre.description.toLowerCase().includes('rpg')
-          )
-        );
-      } else if (filter === 'fps') {
-        filteredGames = filteredGames.filter(g =>
-          g.details?.genres?.some(genre =>
-            genre.description.toLowerCase().includes('action') ||
-            genre.description.toLowerCase().includes('shooter')
-          ) ||
-          g.details?.categories?.some(cat =>
-            cat.description.toLowerCase().includes('fps')
-          )
-        );
-      } else if (filter === 'multiplayer') {
-        filteredGames = filteredGames.filter(g =>
-          g.details?.categories?.some(cat =>
-            cat.description.toLowerCase().includes('multi-player') ||
-            cat.description.toLowerCase().includes('multiplayer')
-          )
-        );
-      } else if (filter === 'top') {
+      if (filter === 'top') {
         filteredGames = filteredGames
           .filter(g => g.details?.metacritic?.score)
           .sort((a, b) =>
             (b.details?.metacritic?.score || 0) - (a.details?.metacritic?.score || 0)
           );
+      } else if (filter !== 'random') {
+        // Generic genre/tag filter
+        filteredGames = filteredGames.filter(g => {
+          const genres = g.details?.genres || [];
+          const categories = g.details?.categories || [];
+          const searchTerm = filter.toLowerCase();
+
+          return genres.some(genre => genre.description.toLowerCase().includes(searchTerm)) ||
+            categories.some(cat => cat.description.toLowerCase().includes(searchTerm));
+        });
       }
 
       if (filteredGames.length === 0) {
@@ -233,11 +220,26 @@ export default function Home() {
   };
 
   const filterButtons = [
-    { label: 'Surprise me', value: 'random', icon: '🎲' },
-    { label: 'RPG', value: 'rpg', icon: '⚔️' },
-    { label: 'FPS', value: 'fps', icon: '🔫' },
-    { label: 'Multiplayer', value: 'multiplayer', icon: '👥' },
-    { label: 'Top rated', value: 'top', icon: '⭐' },
+    { label: 'Surprise me', value: 'random' },
+    { label: 'Top Rated', value: 'top' },
+    { label: 'Action', value: 'action' },
+    { label: 'Adventure', value: 'adventure' },
+    { label: 'RPG', value: 'rpg' },
+    { label: 'Strategy', value: 'strategy' },
+    { label: 'Simulation', value: 'simulation' },
+    { label: 'Sports', value: 'sports' },
+    { label: 'Racing', value: 'racing' },
+    { label: 'Casual', value: 'casual' },
+    { label: 'Indie', value: 'indie' },
+    { label: 'Massively Multiplayer', value: 'massively multiplayer' },
+    { label: 'Platformer', value: 'platformer' },
+    { label: 'Puzzle', value: 'puzzle' },
+    { label: 'Horror', value: 'horror' },
+    { label: 'Sci-Fi', value: 'sci-fi' },
+    { label: 'Fantasy', value: 'fantasy' },
+    { label: 'Shooter', value: 'shooter' },
+    { label: 'Fighting', value: 'fighting' },
+    { label: 'Arcade', value: 'arcade' },
   ];
 
   return (
@@ -316,7 +318,6 @@ export default function Home() {
                     e.currentTarget.style.borderColor = '#1b2838';
                   }}
                 >
-                  <span>{button.icon}</span>
                   <span>{button.label}</span>
                 </button>
               ))}
