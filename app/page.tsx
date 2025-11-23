@@ -261,7 +261,7 @@ export default function Home() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && analyzeLibrary()}
-              placeholder="Enter your Steam username"
+              placeholder="Enter your Steam account name"
               className="flex-1 px-6 py-4 rounded-sm outline-none transition-all"
               style={{
                 background: '#2a475e',
@@ -300,7 +300,7 @@ export default function Home() {
                 <button
                   key={button.value}
                   onClick={() => getRecommendation(button.value)}
-                  disabled={loadingRecommendation}
+                  disabled={loadingRecommendation || loadingDetails}
                   className="px-6 py-3 font-medium rounded-sm transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   style={{
                     background: '#2a475e',
