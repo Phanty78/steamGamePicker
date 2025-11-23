@@ -1,19 +1,10 @@
 import GameCard from './GameCard';
-
-interface Game {
-    appid: number;
-    name: string;
-    playtime_forever: number;
-    img_icon_url?: string;
-    details?: {
-        genres?: Array<{ description: string }>;
-        metacritic?: { score: number } | null;
-    };
-}
+import { Game } from '@/lib/types';
 
 interface GameListProps {
     games: Game[];
 }
+
 
 export default function GameList({ games }: GameListProps) {
     return (

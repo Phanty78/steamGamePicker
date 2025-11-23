@@ -5,30 +5,8 @@ import GameList from '@/components/GameList';
 import RecommendationCard from '@/components/RecommendationCard';
 import { LOADING_MESSAGES } from '@/lib/constants';
 import { saveGameData, getGameData } from '@/lib/cache';
+import { Game, Recommendation } from '@/lib/types';
 
-interface Game {
-  appid: number;
-  name: string;
-  playtime_forever: number;
-  img_icon_url?: string;
-  details?: {
-    genres?: Array<{ description: string }>;
-    metacritic?: { score: number } | null;
-    categories?: Array<{ description: string }>;
-    short_description?: string;
-    header_image?: string;
-  };
-}
-
-interface Recommendation {
-  title: string;
-  appid: number;
-  genres: string[];
-  score: number | null;
-  icon: string;
-  playtime: number;
-  description: string;
-}
 
 export default function Home() {
   const [username, setUsername] = useState('');

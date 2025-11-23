@@ -1,22 +1,4 @@
-interface Game {
-    appid: number;
-    name: string;
-    playtime_forever: number;
-    img_icon_url?: string;
-    details?: {
-        genres?: Array<{ description: string }>;
-        metacritic?: { score: number } | null;
-        categories?: Array<{ description: string }>;
-        short_description?: string;
-        header_image?: string;
-    };
-}
-
-interface CachedData {
-    username: string;
-    games: Game[];
-    timestamp: number;
-}
+import { Game, CachedData } from './types';
 
 const CACHE_KEY_PREFIX = 'steam_games_';
 
@@ -67,33 +49,3 @@ export function getGameData(username: string): Game[] | null {
     }
 }
 
-/**
- * Clear game data from sessionStorage
- */
-export function clearGameData(username: string): void {
-    if (typeof window === 'undefined') return;
-
-    try {
-        sessionStorage.removeItem(`${CACHE_KEY_PREFIX}${username.toLowerCase()}`);
-    } catch (error) {
-        console.error('Failed to clear game data from cache:', error);
-    }
-}
-
-/**
- * Clear all cached game data
- */
-export function clearAllGameData(): void {
-    if (typeof window === 'undefined') return;
-
-    try {
-        const keys = Object.keys(sessionStorage);
-        keys.forEach(key => {
-            if (key.startsWith(CACHE_KEY_PREFIX)) {
-                sessionStorage.removeItem(key);
-            }
-        });
-    } catch (error) {
-        console.error('Failed to clear all game data from cache:', error);
-    }
-}
